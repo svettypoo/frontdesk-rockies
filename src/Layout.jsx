@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Monitor, Users, Map, CreditCard, MessageSquare, Settings, Calendar } from "lucide-react";
+import { Monitor, MessageSquare, Calendar } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,34 +19,16 @@ import {
 
 const navigationItems = [
   {
-    title: "Guest Interface",
+    title: "Home",
     url: createPageUrl("GuestInterface"),
     icon: Monitor,
-    description: "Main tablet interface"
+    description: "Main screen"
   },
   {
-    title: "Admin Dashboard",
-    url: createPageUrl("AdminDashboard"),
-    icon: Users,
-    description: "Device management"
-  },
-  {
-    title: "Video Chat",
+    title: "Call Front Desk",
     url: createPageUrl("VideoChat"),
     icon: MessageSquare,
-    description: "Remote assistance"
-  },
-  {
-    title: "Map Management",
-    url: createPageUrl("MapManagement"),
-    icon: Map,
-    description: "Upload & manage maps"
-  },
-  {
-    title: "Payment System",
-    url: createPageUrl("PaymentSystem"),
-    icon: CreditCard,
-    description: "Payment instructions"
+    description: "Video call staff"
   },
   {
     title: "Bookings",
@@ -69,8 +51,8 @@ export default function Layout({ children, currentPageName }) {
                 <Monitor className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">HotelAssist</h2>
-                <p className="text-sm text-gray-500">Guest Services Platform</p>
+                <h2 className="text-xl font-bold text-gray-900">Front Desk</h2>
+                <p className="text-sm text-gray-500">Rockies Guest Services</p>
               </div>
             </div>
           </SidebarHeader>

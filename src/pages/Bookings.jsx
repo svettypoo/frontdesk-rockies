@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "../lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,11 +18,11 @@ export default function Bookings() {
 
   const { data: bookings = [], isLoading: loadingBookings } = useQuery({
     queryKey: ['bookings'],
-    queryFn: () => base44.entities.Booking.list('-created_date'),
+    queryFn: async () => { const { data } = await supabase.from('fd_bookings').select('*').order('created_at', { ascending: false }); return data || []; },
   });
 
   const createBookingMutation = useMutation({
-    mutationFn: (bookingData) => base44.entities.Booking.create(bookingData),
+    mutationFn: async (bookingData) => { const { data, error } = await supabase.from('fd_bookings').insert(bookingData).select().single(); if (error) throw error; return data; },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       setSelectedType(null);
@@ -32,7 +32,7 @@ export default function Bookings() {
   });
 
   const cancelBookingMutation = useMutation({
-    mutationFn: (id) => base44.entities.Booking.update(id, { status: 'cancelled' }),
+    mutationFn: async (id) => { const { error } = await supabase.from('fd_bookings').update({ status: 'cancelled' }).eq('id', id); if (error) throw error; },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
     },
