@@ -10,14 +10,16 @@ const ADMIN_API = import.meta.env.VITE_ADMIN_API_URL || 'https://frontdesk-rocki
 export default function VideoChat() {
   const [guestName, setGuestName] = useState('')
   const [device, setDevice] = useState(null)
-  const [inCall, setInCall] = useState(false)
+  const [callState, setCallState] = useState('idle') // idle | ringing | active
   const [sessionId, setSessionId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const jitsiRef = useRef(null)
   const apiRef = useRef(null)
+  const pollRef = useRef(null)
+  const roomRef = useRef(null)
 
-  // Auto-populate room and device — try online first, fall back to any device
+  // Auto-populate device — try online first, fall back to any
   useEffect(() => {
     supabase
       .from('fd_devices')
@@ -27,38 +29,76 @@ export default function VideoChat() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) { setDevice(data); return }
-        // Fall back to any registered device
         supabase.from('fd_devices').select('id, jitsi_room, device_name, location').limit(1).maybeSingle()
           .then(({ data: any }) => { if (any) setDevice(any) })
       })
   }, [])
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearInterval(pollRef.current)
+      if (apiRef.current) { apiRef.current.dispose(); apiRef.current = null }
+    }
+  }, [])
+
   const roomName = device?.jitsi_room || 'frontdesk-rockies-main'
 
   async function startCall() {
-    if (!roomName.trim()) { setError('No room configured'); return }
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
     try {
-      const res = await fetch(`${ADMIN_API}/api/jaas-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room: roomName.trim(), name: guestName || 'Guest', isModerator: true }),
-      })
-      const { jwt, roomName: fullRoom, error: apiErr } = await res.json()
-      if (apiErr) throw new Error(apiErr)
-
-      // Register active session so admin sees the call
-      const { data: session } = await supabase
+      // Insert session as 'ringing' — admin will see this and answer
+      const { data: session, error: sessionErr } = await supabase
         .from('fd_sessions')
         .insert({
           guest_name: guestName || 'Guest',
           session_type: 'video_chat',
-          status: 'active',
-          jitsi_room: roomName.trim(),
+          status: 'ringing',
+          jitsi_room: roomName,
           device_id: device?.id || null,
         })
-        .select().single()
-      setSessionId(session?.id)
+        .select()
+        .single()
+      if (sessionErr) throw sessionErr
+
+      setSessionId(session.id)
+      roomRef.current = roomName
+      setCallState('ringing')
+
+      // Poll admin API every 2s to detect when admin answers
+      pollRef.current = setInterval(() => pollSessionStatus(session.id), 2000)
+    } catch (err) {
+      setError(err.message || 'Failed to connect. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function pollSessionStatus(id) {
+    try {
+      const res = await fetch(`${ADMIN_API}/api/sessions?id=${id}`)
+      const session = await res.json()
+      if (session?.status === 'active') {
+        clearInterval(pollRef.current)
+        await joinJitsi(roomRef.current)
+      } else if (session?.status === 'ended') {
+        clearInterval(pollRef.current)
+        setCallState('idle')
+        setSessionId(null)
+      }
+    } catch (e) {}
+  }
+
+  async function joinJitsi(room) {
+    try {
+      const res = await fetch(`${ADMIN_API}/api/jaas-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room: room.trim(), name: guestName || 'Guest', isModerator: true }),
+      })
+      const { jwt, roomName: fullRoom, error: apiErr } = await res.json()
+      if (apiErr) throw new Error(apiErr)
 
       const script = document.createElement('script')
       script.src = `https://8x8.vc/${APP_ID}/external_api.js`
@@ -76,29 +116,86 @@ export default function VideoChat() {
             disableDeepLinking: true,
             toolbarButtons: ['microphone', 'camera', 'hangup', 'chat', 'tileview'],
           },
-          interfaceConfigOverwrite: { SHOW_JITSI_WATERMARK: false, SHOW_WATERMARK_FOR_GUESTS: false, TOOLBAR_ALWAYS_VISIBLE: true },
+          interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            TOOLBAR_ALWAYS_VISIBLE: true,
+          },
           userInfo: { displayName: guestName || 'Guest' },
         })
         apiRef.current.addEventListeners({ readyToClose: endCall, videoConferenceLeft: endCall })
       }
       document.head.appendChild(script)
-      setInCall(true)
+      setCallState('active')
     } catch (err) {
       setError(err.message || 'Failed to connect. Please try again.')
-    } finally {
-      setLoading(false)
+      setCallState('idle')
     }
+  }
+
+  async function cancelCall() {
+    clearInterval(pollRef.current)
+    if (sessionId) {
+      await supabase
+        .from('fd_sessions')
+        .update({ status: 'ended', ended_at: new Date().toISOString() })
+        .eq('id', sessionId)
+    }
+    setCallState('idle')
+    setSessionId(null)
   }
 
   async function endCall() {
+    clearInterval(pollRef.current)
     if (apiRef.current) { apiRef.current.dispose(); apiRef.current = null }
     if (sessionId) {
-      await supabase.from('fd_sessions').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', sessionId)
+      await supabase
+        .from('fd_sessions')
+        .update({ status: 'ended', ended_at: new Date().toISOString() })
+        .eq('id', sessionId)
     }
-    setInCall(false); setSessionId(null)
+    setCallState('idle')
+    setSessionId(null)
   }
 
-  if (inCall) {
+  // ── Waiting room (ringing) ──
+  if (callState === 'ringing') {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 flex flex-col items-center justify-center">
+        <div className="text-center px-8">
+          <div className="relative w-36 h-36 mx-auto mb-8">
+            <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping" style={{ animationDuration: '1.5s' }} />
+            <div className="absolute inset-4 bg-blue-500/30 rounded-full animate-pulse" />
+            <div className="absolute inset-0 flex items-center justify-center text-7xl">📞</div>
+          </div>
+
+          <h2 className="text-3xl font-bold text-white mb-3">Calling Front Desk...</h2>
+          <p className="text-blue-300 text-lg mb-1">Waiting for staff to answer</p>
+          <p className="text-blue-400/50 text-sm mb-10">Available 24 hours · 7 days a week</p>
+
+          <div className="flex justify-center gap-3 mb-12">
+            {[0, 1, 2].map(i => (
+              <div
+                key={i}
+                className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={cancelCall}
+            className="bg-red-600/20 hover:bg-red-600 border border-red-500/50 hover:border-red-500 text-red-300 hover:text-white font-semibold py-4 px-14 rounded-2xl text-lg transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Active call ──
+  if (callState === 'active') {
     return (
       <div className="fixed inset-0 bg-black z-50 flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
@@ -115,11 +212,11 @@ export default function VideoChat() {
     )
   }
 
+  // ── Idle / Call screen ──
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 flex flex-col">
-      {/* Top nav */}
       <div className="px-6 pt-6">
-        <Link to={createPageUrl("GuestInterface")}>
+        <Link to={createPageUrl('GuestInterface')}>
           <button className="flex items-center gap-2 text-blue-300 hover:text-white transition-colors mb-6">
             <ArrowLeft className="w-5 h-5" />
             Back to Home
@@ -135,14 +232,14 @@ export default function VideoChat() {
             </div>
             <h1 className="text-3xl font-bold">Speak with Staff</h1>
             <p className="text-blue-200/80 mt-2">The Rockies Lodge · Front Desk</p>
-            {device && (
-              <p className="text-blue-300/60 text-sm mt-1">📍 {device.location}</p>
-            )}
+            {device && <p className="text-blue-300/60 text-sm mt-1">📍 {device.location}</p>}
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-blue-200 mb-1.5 font-medium">Your Name or Room Number (optional)</label>
+              <label className="block text-sm text-blue-200 mb-1.5 font-medium">
+                Your Name or Room Number (optional)
+              </label>
               <input
                 value={guestName}
                 onChange={e => setGuestName(e.target.value)}
@@ -153,7 +250,9 @@ export default function VideoChat() {
             </div>
 
             {error && (
-              <div className="bg-red-500/20 border border-red-400/30 rounded-xl p-3 text-red-300 text-sm text-center">{error}</div>
+              <div className="bg-red-500/20 border border-red-400/30 rounded-xl p-3 text-red-300 text-sm text-center">
+                {error}
+              </div>
             )}
 
             <button
