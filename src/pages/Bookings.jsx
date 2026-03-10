@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 const GUEST_KEY = 'rl_guest_name';
+const ADMIN_API = import.meta.env.VITE_ADMIN_API_URL || 'https://frontdesk-rockies-admin.vercel.app';
 
 export default function Bookings() {
   const [selectedType, setSelectedType] = useState(null);
@@ -44,6 +45,14 @@ export default function Bookings() {
       if (data.guest_name) {
         localStorage.setItem(GUEST_KEY, data.guest_name);
         setGuestName(data.guest_name);
+      }
+      // Send confirmation email (fire-and-forget)
+      if (data.guest_email) {
+        fetch(`${ADMIN_API}/api/booking-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        }).catch(() => {});
       }
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       setSelectedType(null);

@@ -42,7 +42,7 @@ export default function VideoChat() {
       const res = await fetch(`${ADMIN_API}/api/jaas-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room: roomName.trim(), name: guestName || 'Guest', isModerator: false }),
+        body: JSON.stringify({ room: roomName.trim(), name: guestName || 'Guest', isModerator: true }),
       })
       const { jwt, roomName: fullRoom, error: apiErr } = await res.json()
       if (apiErr) throw new Error(apiErr)
