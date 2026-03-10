@@ -7,7 +7,7 @@ import { supabase } from "../lib/supabase";
 
 const STATUS_OPTIONS = [
   {
-    value: "do_not_disturb",
+    value: "dnd",
     label: "Do Not Disturb",
     emoji: "🚫",
     description: "Please do not enter my room",
@@ -18,7 +18,7 @@ const STATUS_OPTIONS = [
     badge: "bg-red-100 text-red-700",
   },
   {
-    value: "please_clean",
+    value: "clean_requested",
     label: "Please Clean My Room",
     emoji: "🧹",
     description: "I'd like housekeeping service",

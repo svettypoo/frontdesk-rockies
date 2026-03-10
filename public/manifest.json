@@ -1,0 +1,16 @@
+{
+  "name": "The Rockies Lodge",
+  "short_name": "Rockies Lodge",
+  "description": "Guest services kiosk for The Rockies Lodge",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e3a5f",
+  "theme_color": "#1e3a5f",
+  "icons": [
+    {
+      "src": "https://base44.com/logo_v2.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -99,7 +99,7 @@ export default function RoomService() {
           items,
           total: cartTotal,
           special_instructions: specialInstructions.trim() || null,
-          status: "received",
+          status: "pending",
         },
       ]);
       if (dbError) throw dbError;
