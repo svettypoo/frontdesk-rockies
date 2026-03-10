@@ -1,13 +1,12 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Monitor, MessageSquare, Calendar } from "lucide-react";
+import { Monitor, MessageSquare, Calendar, Map, CreditCard } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -22,7 +21,7 @@ const navigationItems = [
     title: "Home",
     url: createPageUrl("GuestInterface"),
     icon: Monitor,
-    description: "Main screen"
+    description: "Welcome screen"
   },
   {
     title: "Call Front Desk",
@@ -31,11 +30,23 @@ const navigationItems = [
     description: "Video call staff"
   },
   {
-    title: "Bookings",
+    title: "Hotel Map",
+    url: createPageUrl("HotelMap"),
+    icon: Map,
+    description: "Find your way around"
+  },
+  {
+    title: "Amenity Bookings",
     url: createPageUrl("Bookings"),
     icon: Calendar,
     description: "Reserve amenities"
-  }
+  },
+  {
+    title: "My Bill",
+    url: createPageUrl("PaymentCheck"),
+    icon: CreditCard,
+    description: "View pending charges"
+  },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -48,26 +59,23 @@ export default function Layout({ children, currentPageName }) {
           <SidebarHeader className="border-b border-blue-100 p-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Monitor className="w-6 h-6 text-white" />
+                <span className="text-lg">🏔️</span>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Front Desk</h2>
-                <p className="text-sm text-gray-500">Rockies Guest Services</p>
+                <h2 className="text-xl font-bold text-gray-900">The Rockies Lodge</h2>
+                <p className="text-sm text-gray-500">Guest Services</p>
               </div>
             </div>
           </SidebarHeader>
-          
+
           <SidebarContent className="p-3">
             <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-3">
-                System Navigation
-              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {navigationItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
+                      <SidebarMenuButton
+                        asChild
                         className={`hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 rounded-xl mb-1 ${
                           location.pathname === item.url ? 'bg-blue-50 text-blue-700 shadow-sm' : ''
                         }`}
@@ -88,14 +96,10 @@ export default function Layout({ children, currentPageName }) {
           </SidebarContent>
 
           <SidebarFooter className="border-t border-blue-100 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                <Settings className="w-5 h-5 text-gray-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 text-sm">System Admin</p>
-                <p className="text-xs text-gray-500">Hotel Management Portal</p>
-              </div>
+            <div className="text-center">
+              <p className="font-semibold text-gray-900 text-sm">🏔️ The Rockies Lodge</p>
+              <p className="text-xs text-gray-500">1 Alpine Drive, Canmore, AB</p>
+              <p className="text-xs text-blue-600 font-medium mt-1">Front Desk: Dial 0 · Open 24/7</p>
             </div>
           </SidebarFooter>
         </Sidebar>
@@ -104,7 +108,7 @@ export default function Layout({ children, currentPageName }) {
           <header className="bg-white/80 backdrop-blur-sm border-b border-blue-100 px-6 py-4 md:hidden">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="hover:bg-blue-50 p-2 rounded-xl transition-colors duration-200" />
-              <h1 className="text-xl font-bold text-gray-900">HotelAssist</h1>
+              <h1 className="text-xl font-bold text-gray-900">The Rockies Lodge</h1>
             </div>
           </header>
 

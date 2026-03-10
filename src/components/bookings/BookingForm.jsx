@@ -17,9 +17,9 @@ const timeSlots = [
   "20:00-21:00", "21:00-22:00"
 ];
 
-export default function BookingForm({ bookingType, onSubmit, onCancel, isSubmitting }) {
+export default function BookingForm({ bookingType, onSubmit, onCancel, isSubmitting, defaultGuestName = "" }) {
   const [formData, setFormData] = useState({
-    guest_name: "",
+    guest_name: defaultGuestName,
     guest_email: "",
     room_number: "",
     booking_date: null,
