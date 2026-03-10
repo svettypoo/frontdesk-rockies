@@ -17,18 +17,23 @@ export default function VideoChat() {
   const jitsiRef = useRef(null)
   const apiRef = useRef(null)
 
-  // Auto-populate room and device from any online device record
+  // Auto-populate room and device — try online first, fall back to any device
   useEffect(() => {
     supabase
       .from('fd_devices')
       .select('id, jitsi_room, device_name, location')
       .eq('status', 'online')
       .limit(1)
-      .single()
-      .then(({ data }) => { if (data) setDevice(data) })
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) { setDevice(data); return }
+        // Fall back to any registered device
+        supabase.from('fd_devices').select('id, jitsi_room, device_name, location').limit(1).maybeSingle()
+          .then(({ data: any }) => { if (any) setDevice(any) })
+      })
   }, [])
 
-  const roomName = device?.jitsi_room || 'frontdesk-main'
+  const roomName = device?.jitsi_room || 'frontdesk-rockies-main'
 
   async function startCall() {
     if (!roomName.trim()) { setError('No room configured'); return }
