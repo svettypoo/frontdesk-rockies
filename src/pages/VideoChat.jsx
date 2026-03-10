@@ -19,6 +19,9 @@ export default function VideoChat() {
   const pollRef = useRef(null)
   const roomRef = useRef(null)
   const ringRef = useRef(null)
+  const recogRef = useRef(null)
+  const guestTranscriptRef = useRef('')
+  const transcriptSyncRef = useRef(null)
 
   function playRingTone() {
     try {
@@ -58,9 +61,48 @@ export default function VideoChat() {
   useEffect(() => {
     return () => {
       clearInterval(pollRef.current)
+      clearInterval(transcriptSyncRef.current)
+      stopGuestTranscription()
       if (apiRef.current) { apiRef.current.dispose(); apiRef.current = null }
     }
   }, [])
+
+  function startGuestTranscription(sessionId) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) return
+    const r = new SR()
+    r.continuous = true
+    r.interimResults = false
+    r.lang = 'en-US'
+    r.onresult = (event) => {
+      let newText = ''
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) newText += event.results[i][0].transcript + ' '
+      }
+      if (newText.trim()) guestTranscriptRef.current += newText
+    }
+    r.onerror = () => {}
+    r.onend = () => { try { r.start() } catch (e) {} }
+    try { r.start() } catch (e) {}
+    recogRef.current = r
+
+    // Sync guest transcript to Supabase every 10 seconds
+    transcriptSyncRef.current = setInterval(async () => {
+      if (!guestTranscriptRef.current.trim()) return
+      await supabase
+        .from('fd_sessions')
+        .update({ guest_transcript: guestTranscriptRef.current })
+        .eq('id', sessionId)
+    }, 10000)
+  }
+
+  function stopGuestTranscription() {
+    clearInterval(transcriptSyncRef.current)
+    if (recogRef.current) {
+      try { recogRef.current.abort() } catch (e) {}
+      recogRef.current = null
+    }
+  }
 
   const roomName = device?.jitsi_room || 'frontdesk-rockies-main'
 
@@ -105,7 +147,7 @@ export default function VideoChat() {
       const session = await res.json()
       if (session?.status === 'active') {
         clearInterval(pollRef.current)
-        await joinJitsi(roomRef.current)
+        await joinJitsi(roomRef.current, session.id)
       } else if (session?.status === 'ended') {
         clearInterval(pollRef.current)
         setCallState('idle')
@@ -114,7 +156,7 @@ export default function VideoChat() {
     } catch (e) {}
   }
 
-  async function joinJitsi(room) {
+  async function joinJitsi(room, sessionId) {
     clearInterval(ringRef.current)
     try {
       const res = await fetch(`${ADMIN_API}/api/jaas-token`, {
@@ -150,6 +192,7 @@ export default function VideoChat() {
           userInfo: { displayName: guestName || 'Guest' },
         })
         apiRef.current.addEventListeners({ readyToClose: endCall, videoConferenceLeft: endCall })
+        startGuestTranscription(sessionId)
       }
       document.head.appendChild(script)
       setCallState('active')
@@ -162,6 +205,7 @@ export default function VideoChat() {
   async function cancelCall() {
     clearInterval(pollRef.current)
     clearInterval(ringRef.current)
+    stopGuestTranscription()
     if (sessionId) {
       await supabase
         .from('fd_sessions')
@@ -175,6 +219,7 @@ export default function VideoChat() {
   async function endCall() {
     clearInterval(pollRef.current)
     clearInterval(ringRef.current)
+    stopGuestTranscription()
     if (apiRef.current) { apiRef.current.dispose(); apiRef.current = null }
     if (sessionId) {
       await supabase
