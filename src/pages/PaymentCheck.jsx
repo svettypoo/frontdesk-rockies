@@ -18,12 +18,11 @@ export default function PaymentCheck() {
     setError(null);
     setPayments(null);
 
-    // Look up payment instructions that were sent to a guest from this room
-    // We match by guest_name containing room number or by checking fd_sessions device room
+    // Look up payment instructions by room_number (primary) or fallback to text search
     const { data, error: err } = await supabase
       .from('fd_payment_instructions')
       .select('*')
-      .or(`guest_name.ilike.%Room ${roomNumber}%,guest_name.ilike.%room ${roomNumber}%,description.ilike.%Room ${roomNumber}%,description.ilike.%room ${roomNumber}%`)
+      .or(`room_number.eq.${roomNumber},guest_name.ilike.%Room ${roomNumber}%,description.ilike.%Room ${roomNumber}%`)
       .in('status', ['pending', 'sent'])
       .order('created_at', { ascending: false });
 
