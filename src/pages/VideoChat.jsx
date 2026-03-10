@@ -18,6 +18,26 @@ export default function VideoChat() {
   const apiRef = useRef(null)
   const pollRef = useRef(null)
   const roomRef = useRef(null)
+  const ringRef = useRef(null)
+
+  function playRingTone() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      const createTone = (freq, start, dur) => {
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain); gain.connect(ctx.destination)
+        osc.frequency.value = freq; osc.type = 'sine'
+        gain.gain.setValueAtTime(0.25, ctx.currentTime + start)
+        gain.gain.setValueAtTime(0.25, ctx.currentTime + start + dur - 0.05)
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur)
+        osc.start(ctx.currentTime + start); osc.stop(ctx.currentTime + start + dur)
+      }
+      createTone(400, 0, 0.4); createTone(480, 0, 0.4)
+      createTone(400, 0.6, 0.4); createTone(480, 0.6, 0.4)
+      setTimeout(() => ctx.close(), 2000)
+    } catch (e) {}
+  }
 
   // Auto-populate device — try online first, fall back to any
   useEffect(() => {
@@ -66,6 +86,10 @@ export default function VideoChat() {
       roomRef.current = roomName
       setCallState('ringing')
 
+      // Start ringing audio on guest side
+      playRingTone()
+      ringRef.current = setInterval(playRingTone, 3000)
+
       // Poll admin API every 2s to detect when admin answers
       pollRef.current = setInterval(() => pollSessionStatus(session.id), 2000)
     } catch (err) {
@@ -91,6 +115,7 @@ export default function VideoChat() {
   }
 
   async function joinJitsi(room) {
+    clearInterval(ringRef.current)
     try {
       const res = await fetch(`${ADMIN_API}/api/jaas-token`, {
         method: 'POST',
@@ -135,6 +160,7 @@ export default function VideoChat() {
 
   async function cancelCall() {
     clearInterval(pollRef.current)
+    clearInterval(ringRef.current)
     if (sessionId) {
       await supabase
         .from('fd_sessions')
@@ -147,6 +173,7 @@ export default function VideoChat() {
 
   async function endCall() {
     clearInterval(pollRef.current)
+    clearInterval(ringRef.current)
     if (apiRef.current) { apiRef.current.dispose(); apiRef.current = null }
     if (sessionId) {
       await supabase
