@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Video, Map, Phone, Calendar, CreditCard, Wifi, Clock, Info } from "lucide-react";
+import { Video, Map, Phone, Calendar, CreditCard, Wifi, Clock, Info, Wrench, UtensilsCrossed, Bot, MapPin, BedDouble } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
@@ -65,7 +65,7 @@ export default function GuestInterface() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="grid grid-cols-2 md:grid-cols-3 gap-5 max-w-4xl w-full mb-6"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl w-full mb-6"
         >
           <Link to={createPageUrl("VideoChat")}>
             <Card className="group hover:scale-105 active:scale-95 transition-all duration-200 bg-white/90 border-0 shadow-2xl cursor-pointer h-full">
@@ -123,6 +123,66 @@ export default function GuestInterface() {
                 </div>
                 <h3 className="text-xl font-bold text-gray-800 mb-2">Hotel Info</h3>
                 <p className="text-sm text-gray-500">Hours, services & local attractions</p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to={createPageUrl("MaintenanceRequest")}>
+            <Card className="group hover:scale-105 active:scale-95 transition-all duration-200 bg-white/90 border-0 shadow-2xl cursor-pointer h-full">
+              <CardContent className="p-7 text-center h-full flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <Wrench className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Report Issue</h3>
+                <p className="text-sm text-gray-500">Maintenance, cleaning or repairs</p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to={createPageUrl("RoomService")}>
+            <Card className="group hover:scale-105 active:scale-95 transition-all duration-200 bg-white/90 border-0 shadow-2xl cursor-pointer h-full">
+              <CardContent className="p-7 text-center h-full flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <UtensilsCrossed className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Room Service</h3>
+                <p className="text-sm text-gray-500">Order food and drinks to your room</p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to={createPageUrl("ChatBot")}>
+            <Card className="group hover:scale-105 active:scale-95 transition-all duration-200 bg-white/90 border-0 shadow-2xl cursor-pointer h-full">
+              <CardContent className="p-7 text-center h-full flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <Bot className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">AI Concierge</h3>
+                <p className="text-sm text-gray-500">Ask me anything about the hotel</p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to={createPageUrl("Concierge")}>
+            <Card className="group hover:scale-105 active:scale-95 transition-all duration-200 bg-white/90 border-0 shadow-2xl cursor-pointer h-full">
+              <CardContent className="p-7 text-center h-full flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <MapPin className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Local Guide</h3>
+                <p className="text-sm text-gray-500">Restaurants, trails & activities nearby</p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to={createPageUrl("Housekeeping")}>
+            <Card className="group hover:scale-105 active:scale-95 transition-all duration-200 bg-white/90 border-0 shadow-2xl cursor-pointer h-full">
+              <CardContent className="p-7 text-center h-full flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <BedDouble className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Housekeeping</h3>
+                <p className="text-sm text-gray-500">Do not disturb or request cleaning</p>
               </CardContent>
             </Card>
           </Link>
