@@ -1,17 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Video, Map, Phone, Calendar, CreditCard, Wifi, Clock, Info, Wrench, UtensilsCrossed, Bot, MapPin, BedDouble } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
+import { registerPlugin } from "@capacitor/core";
+
+const Kiosk = registerPlugin("Kiosk");
 
 export default function GuestInterface() {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const tapTimes = useRef([]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleCornerTap = () => {
+    const now = Date.now();
+    tapTimes.current = tapTimes.current.filter(t => now - t < 3000);
+    tapTimes.current.push(now);
+    if (tapTimes.current.length >= 15) {
+      tapTimes.current = [];
+      Kiosk.exitKiosk().catch(() => {});
+    }
+  };
 
   const formatTime = (date) =>
     date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -21,6 +35,12 @@ export default function GuestInterface() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-800 relative overflow-hidden">
+      {/* Hidden staff exit zone — tap 15 times within 3 seconds to exit kiosk mode */}
+      <div
+        onClick={handleCornerTap}
+        className="absolute top-0 right-0 w-20 h-20 z-50"
+        style={{ WebkitTapHighlightColor: "transparent" }}
+      />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-10 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl animate-pulse delay-1000" />

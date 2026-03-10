@@ -8,7 +8,8 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(KioskPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Keep screen always on — never sleep

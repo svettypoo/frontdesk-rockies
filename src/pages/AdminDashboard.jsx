@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Device, ChatSession } from "@/entities/all";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Info } from "lucide-react";
 import { motion } from "framer-motion";
 
 import DeviceGrid from "../components/admin/DeviceGrid";
@@ -67,6 +67,24 @@ export default function AdminDashboard() {
               <Plus className="w-5 h-5 mr-2" />
               Add Device
             </Button>
+          </div>
+        </motion.div>
+
+        {/* Kiosk Setup Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start"
+        >
+          <Info className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+          <div>
+            <p className="font-semibold text-amber-800 mb-1">Kiosk Exit (Staff Only)</p>
+            <p className="text-sm text-amber-700">
+              To exit kiosk mode on a tablet, tap the <strong>top-right corner of the screen 15 times</strong> within 3 seconds.
+              The device will return to the Android home screen. If Device Owner mode was set up via ADB, this is the only
+              software exit — otherwise the Home button also works. To re-enter kiosk mode, simply open the app again.
+            </p>
           </div>
         </motion.div>
 
