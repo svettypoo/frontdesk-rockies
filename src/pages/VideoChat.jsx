@@ -5,7 +5,7 @@ import { createPageUrl } from '@/utils'
 import { ArrowLeft } from 'lucide-react'
 
 const APP_ID = import.meta.env.VITE_JAAS_APP_ID || 'vpaas-magic-cookie-e866a734fd5742ea83b9df9d3fab8807'
-const ADMIN_API = import.meta.env.VITE_ADMIN_API_URL || 'https://frontdesk-rockies-admin.vercel.app'
+const ADMIN_API = import.meta.env.VITE_ADMIN_API_URL || 'https://frontdesk-admin-production.up.railway.app'
 
 export default function VideoChat() {
   const [guestName, setGuestName] = useState('')
