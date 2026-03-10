@@ -138,6 +138,7 @@ export default function VideoChat() {
             startWithAudioMuted: false,
             startWithVideoMuted: false,
             prejoinPageEnabled: false,
+            prejoinConfig: { enabled: false },
             disableDeepLinking: true,
             toolbarButtons: ['microphone', 'camera', 'hangup', 'chat', 'tileview'],
           },
