@@ -7,12 +7,14 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 
 const bookingIcons = {
+  hot_tub: Waves,
   hottub: Waves,
   parking: Car,
   locker: Lock
 };
 
 const bookingLabels = {
+  hot_tub: "Hot Tub",
   hottub: "Hot Tub",
   parking: "Parking",
   locker: "Locker"

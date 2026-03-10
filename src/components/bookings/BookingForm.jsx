@@ -27,18 +27,20 @@ export default function BookingForm({ bookingType, onSubmit, onCancel, isSubmitt
     notes: ""
   });
 
+  const normalizedType = bookingType === 'hottub' ? 'hot_tub' : bookingType;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
       ...formData,
-      booking_type: bookingType,
+      booking_type: normalizedType,
       booking_date: formData.booking_date ? format(formData.booking_date, 'yyyy-MM-dd') : null
     });
   };
 
-  const isFormValid = formData.guest_name && formData.guest_email && 
-                      formData.room_number && formData.booking_date && 
-                      (bookingType !== 'hottub' || formData.booking_time);
+  const isFormValid = formData.guest_name && formData.guest_email &&
+                      formData.room_number && formData.booking_date &&
+                      (normalizedType !== 'hot_tub' || formData.booking_time);
 
   return (
     <motion.div
