@@ -101,7 +101,7 @@ export default function VideoChat() {
 
   async function pollSessionStatus(id) {
     try {
-      const res = await fetch(`${ADMIN_API}/api/sessions?id=${id}`)
+      const res = await fetch(`${ADMIN_API}/api/sessions?id=${id}&_=` + Date.now(), { cache: 'no-store' })
       const session = await res.json()
       if (session?.status === 'active') {
         clearInterval(pollRef.current)
