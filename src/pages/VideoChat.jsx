@@ -130,6 +130,18 @@ export default function VideoChat() {
       roomRef.current = roomName
       setCallState('ringing')
 
+      // Trigger Web Push to all admin devices immediately (fire-and-forget)
+      fetch(`${ADMIN_API}/api/push-notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: session.id,
+          guestName: guestName || 'Guest',
+          location: device?.location || null,
+          sessionUrl: '/calls',
+        }),
+      }).catch(() => {})
+
       // Start ringing audio on guest side
       playRingTone()
       ringRef.current = setInterval(playRingTone, 3000)
