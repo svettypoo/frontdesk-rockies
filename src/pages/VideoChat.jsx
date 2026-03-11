@@ -19,6 +19,7 @@ export default function VideoChat() {
   const pollRef = useRef(null)
   const roomRef = useRef(null)
   const ringRef = useRef(null)
+  const ringTimeoutRef = useRef(null)
   const recogRef = useRef(null)
   const guestTranscriptRef = useRef('')
   const transcriptSyncRef = useRef(null)
@@ -62,6 +63,7 @@ export default function VideoChat() {
     return () => {
       clearInterval(pollRef.current)
       clearInterval(transcriptSyncRef.current)
+      clearTimeout(ringTimeoutRef.current)
       stopGuestTranscription()
       if (apiRef.current) { apiRef.current.dispose(); apiRef.current = null }
     }
@@ -134,6 +136,16 @@ export default function VideoChat() {
 
       // Poll admin API every 2s to detect when admin answers
       pollRef.current = setInterval(() => pollSessionStatus(session.id), 2000)
+
+      // Auto-cancel after 90 seconds if no one answers
+      ringTimeoutRef.current = setTimeout(async () => {
+        clearInterval(pollRef.current)
+        clearInterval(ringRef.current)
+        await supabase.from('fd_sessions').update({ status: 'ended', ended_at: new Date().toISOString() }).eq('id', session.id)
+        setCallState('idle')
+        setSessionId(null)
+        setError('No one answered. Please try again or contact staff another way.')
+      }, 90000)
     } catch (err) {
       setError(err.message || 'Failed to connect. Please try again.')
     } finally {
@@ -205,6 +217,7 @@ export default function VideoChat() {
   async function cancelCall() {
     clearInterval(pollRef.current)
     clearInterval(ringRef.current)
+    clearTimeout(ringTimeoutRef.current)
     stopGuestTranscription()
     if (sessionId) {
       await supabase
@@ -219,6 +232,7 @@ export default function VideoChat() {
   async function endCall() {
     clearInterval(pollRef.current)
     clearInterval(ringRef.current)
+    clearTimeout(ringTimeoutRef.current)
     stopGuestTranscription()
     if (apiRef.current) { apiRef.current.dispose(); apiRef.current = null }
     if (sessionId) {
