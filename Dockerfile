@@ -7,6 +7,13 @@ RUN npm ci
 # Stage 2: Build
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Vite needs these at build time
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_ADMIN_API_URL
+ARG VITE_LIVEKIT_URL
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
