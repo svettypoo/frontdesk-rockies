@@ -1,9 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Phone, Clock, X, ExternalLink } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, Clock, X, ExternalLink, Beer, UtensilsCrossed, Croissant, Snowflake, Footprints, Mountain, PersonStanding, ShoppingCart, Map } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../lib/supabase";
+
+const EMOJI_TO_ICON = {
+  "🍺": Beer, "🍻": Beer,
+  "🍽️": UtensilsCrossed, "🍽": UtensilsCrossed, "🍴": UtensilsCrossed,
+  "🥯": Croissant, "🥐": Croissant, "☕": Croissant,
+  "⛷️": Snowflake, "⛷": Snowflake, "🎿": Snowflake,
+  "🥾": Footprints, "🚶": Footprints, "👟": Footprints,
+  "🏔️": Mountain, "🏔": Mountain, "⛰️": Mountain, "⛰": Mountain,
+  "🧗": PersonStanding, "🧗‍♂️": PersonStanding, "🏊": PersonStanding,
+  "🛒": ShoppingCart, "🛍️": ShoppingCart, "🛍": ShoppingCart,
+  "📍": MapPin,
+};
+
+function EntryIcon({ emoji, size = "w-5 h-5", color = "text-slate-500" }) {
+  const IconComponent = EMOJI_TO_ICON[emoji];
+  if (IconComponent) return <IconComponent className={`${size} ${color}`} />;
+  return <MapPin className={`${size} ${color}`} />;
+}
 
 const CATEGORIES = ["All", "Restaurants", "Breakfast", "Hiking", "Activities", "Recreation", "Shopping"];
 
@@ -69,7 +87,7 @@ export default function Concierge() {
           transition={{ duration: 0.5 }}
           className="text-center mb-6 w-full max-w-2xl"
         >
-          <span className="text-5xl mb-2 block">🗺️</span>
+          <span className="mb-2 block"><Map className="w-12 h-12 text-blue-500 mx-auto" /></span>
           <h1 className="text-3xl font-bold text-gray-800">Local Guide</h1>
           <p className="text-gray-500 text-sm mt-1">Discover the best of Canmore & the Rockies</p>
         </motion.div>
@@ -116,9 +134,9 @@ export default function Concierge() {
                 onClick={() => setSelected(entry)}
                 className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 text-left flex items-start gap-4 hover:shadow-lg transition-shadow duration-200 w-full"
               >
-                {/* Emoji */}
-                <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-2xl flex-shrink-0">
-                  {entry.emoji || "📍"}
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
+                  <EntryIcon emoji={entry.emoji} size="w-6 h-6" color="text-gray-500" />
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -191,8 +209,8 @@ export default function Concierge() {
               {/* Modal Header */}
               <div className="flex items-start justify-between p-5 border-b border-gray-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-2xl">
-                    {selected.emoji || "📍"}
+                  <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center">
+                    <EntryIcon emoji={selected.emoji} size="w-6 h-6" color="text-gray-500" />
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-gray-800">{selected.title}</h2>
